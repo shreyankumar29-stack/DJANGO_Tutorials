@@ -1,161 +1,120 @@
-# Video 11 Commands – Pagination
+# Django Tutorial -- Video 12 Commands
 
-## Project Directory
+## 1. Repository Root
 
-```powershell
+``` powershell
 cd "C:\Users\Shreyansh kumar\Documents\DJANGO_Tutorials"
 ```
 
-## Activate Virtual Environment
+## 2. Activate Virtual Environment
 
-```powershell
+``` powershell
 .\.venv\Scripts\Activate.ps1
 ```
 
-## Enter Video 11
+## 3. Part 12 Directory
 
-```powershell
-cd "11-Pagination\django_project"
+``` powershell
+cd "12-Password-Reset\django_project"
 ```
 
-## Check Django Version
+## 4. Django Version
 
-```powershell
+``` powershell
 python -m django --version
 ```
 
-## Check Project
+## 5. Install dotenv
 
-```powershell
+``` powershell
+python -m pip install python-dotenv
+```
+
+## 6. Project Check
+
+``` powershell
 python manage.py check
 ```
 
-Expected:
+## 7. Run Server
 
-```text
-System check identified no issues (0 silenced).
-```
-
-## Run Server
-
-```powershell
+``` powershell
 python manage.py runserver
 ```
 
-## Pagination URLs
+## 8. Password Reset Page
 
-Home:
-
-```text
-http://127.0.0.1:8000/
+``` text
+http://127.0.0.1:8000/password-reset/
 ```
 
-Page 2:
+## 9. Check Email Configuration
 
-```text
-http://127.0.0.1:8000/?page=2
-```
-
-User posts:
-
-```text
-http://127.0.0.1:8000/user/Shreyansh/
-```
-
-User page 2:
-
-```text
-http://127.0.0.1:8000/user/Shreyansh/?page=2
-```
-
-Replace `Shreyansh` with the actual username.
-
-## Django Shell
-
-```powershell
+``` powershell
 python manage.py shell
 ```
 
-```python
-from blog.models import Post
-Post.objects.all()
-```
-
-Count posts:
-
-```python
-Post.objects.count()
-```
-
-Print posts:
-
-```python
-for post in Post.objects.all():
-    print(post.id, post.title, post.author)
+``` python
+from django.conf import settings
+print(settings.EMAIL_HOST_USER)
+print(bool(settings.EMAIL_HOST_PASSWORD))
 ```
 
 Exit:
 
-```python
+``` python
 exit()
 ```
 
-## Testing Pagination
+## 10. Check Registered User Emails
 
-With:
-
-```python
-paginate_by = 5
+``` powershell
+python manage.py shell
 ```
 
-```text
-5 posts  → 1 page
-6 posts  → 2 pages
-10 posts → 2 pages
-11 posts → 3 pages
+``` python
+from django.contrib.auth.models import User
+
+for user in User.objects.all():
+    print(user.username, user.email)
 ```
 
-## Git
+Exit:
 
-```powershell
+``` python
+exit()
+```
+
+## 11. Manually Reset a Password
+
+``` powershell
+python manage.py changepassword Shreyansh
+```
+
+## 12. Git Commands
+
+From the repository root:
+
+``` powershell
+cd "C:\Users\Shreyansh kumar\Documents\DJANGO_Tutorials"
 git status
 git add .
-git commit -m "Complete Video 11 pagination"
+git commit -m "Complete Video 12 password reset"
 git push
 ```
 
-## Optional Requirements
+## 13. Important
 
-```powershell
-python -m pip freeze > requirements.txt
+Do not commit:
+
+``` text
+.env
 ```
 
-## Important
+`.gitignore` must contain:
 
-No migration is normally required for Video 11 because the changes are in views, URLs, and templates.
-
-Do not delete:
-
-```text
-db.sqlite3
+``` gitignore
+.env
 ```
 
-## Final Verification
-
-```powershell
-python manage.py check
-python manage.py runserver
-```
-
-Then test:
-
-1. Home page
-2. Page 2
-3. Page 3 if enough posts exist
-4. Author name
-5. User-specific posts page
-6. User-specific pagination
-7. Invalid username → 404
-8. Create post
-9. Update own post
-10. Delete own post
+Never put the Gmail App Password directly into tracked source files.

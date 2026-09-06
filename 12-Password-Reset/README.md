@@ -1,177 +1,88 @@
-# Django Tutorial – Video 11
-## Pagination
+# Django Tutorial -- Video 12: Email and Password Reset
 
-### Overview
-Video 11 adds pagination to the Django Blog and introduces a user-specific posts page.
+## Overview
 
-### Concepts
-- `ListView`
-- `paginate_by`
-- `page_obj`
-- `paginator`
-- `is_paginated`
-- `get_queryset()`
-- `get_object_or_404()`
-- `self.kwargs`
-- User-specific post URLs
-- Previous/Next/First/Last pagination
+This part continues the Django Blog project from Video 11 and adds
+password-reset functionality using Django's built-in authentication
+views and email system.
 
-### Main Post Pagination
+## What We Learned
 
-```python
-class PostListView(ListView):
-    model = Post
-    template_name = 'blog/home.html'
-    context_object_name = 'posts'
-    ordering = ['-date_posted']
-    paginate_by = 5
+-   Password reset requests and the complete reset flow
+-   Django built-in password reset views
+-   Password reset email configuration
+-   Gmail SMTP configuration
+-   Using a `.env` file for email credentials
+-   Loading environment variables with `python-dotenv`
+-   Password reset templates and URLs
+
+## Project Structure
+
+``` text
+DJANGO_Tutorials/
+├── .env
+├── .gitignore
+└── 12-Password-Reset/
+    └── django_project/
+        ├── manage.py
+        ├── db.sqlite3
+        ├── blog/
+        ├── users/
+        └── django_project/
+            └── settings.py
 ```
 
-`paginate_by = 5` displays a maximum of five posts per page.
+## Email Configuration
 
-### User-Specific Posts
-
-```python
-class UserPostListView(ListView):
-    model = Post
-    template_name = 'blog/user_posts.html'
-    context_object_name = 'posts'
-    paginate_by = 5
-
-    def get_queryset(self):
-        user = get_object_or_404(
-            User,
-            username=self.kwargs.get('username')
-        )
-
-        return Post.objects.filter(
-            author=user
-        ).order_by('-date_posted')
+``` python
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = os.environ.get('EMAIL_USER')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_PASS')
 ```
 
-This creates a page showing only posts written by the selected user.
+Root `.env`:
 
-### URL
-
-```python
-path(
-    'user/<str:username>/',
-    UserPostListView.as_view(),
-    name='user-posts'
-)
+``` env
+EMAIL_USER=yourgmail@gmail.com
+EMAIL_PASS=your_16_character_app_password
 ```
 
-Example:
+The `.env` file must not be committed to Git.
 
-```text
-/user/Shreyansh/
+## Password Reset Flow
+
+1.  User opens the password-reset page.
+2.  User enters the registered email address.
+3.  Django generates a password-reset link.
+4.  Django sends the email through Gmail SMTP.
+5.  User opens the link.
+6.  User sets a new password.
+7.  Django confirms the password change.
+
+## Testing
+
+``` powershell
+python manage.py check
+python manage.py runserver
 ```
 
-### Pagination Template Logic
+Open:
 
-```django
-{% if is_paginated %}
-
-    {% if page_obj.has_previous %}
-        <a href="?page={{ page_obj.previous_page_number }}">
-            Previous
-        </a>
-    {% endif %}
-
-    {% for num in page_obj.paginator.page_range %}
-        <a href="?page={{ num }}">{{ num }}</a>
-    {% endfor %}
-
-    {% if page_obj.has_next %}
-        <a href="?page={{ page_obj.next_page_number }}">
-            Next
-        </a>
-    {% endif %}
-
-{% endif %}
+``` text
+http://127.0.0.1:8000/password-reset/
 ```
 
-### Important Variables
+Use an email address registered with the Django user account.
 
-| Variable | Purpose |
-|---|---|
-| `paginate_by` | Objects per page |
-| `page_obj` | Current page |
-| `paginator` | Pagination information |
-| `is_paginated` | Whether multiple pages exist |
-| `has_previous()` | Checks previous page |
-| `has_next()` | Checks next page |
-| `previous_page_number()` | Gets previous page number |
-| `next_page_number()` | Gets next page number |
-| `page_range` | Available page numbers |
+## Security
 
-### Errors Encountered
+-   Never commit `.env`.
+-   Never share the Gmail App Password.
+-   Use a Google App Password instead of the normal Gmail password.
 
-#### NoReverseMatch
+## Status
 
-```text
-Reverse for 'user-posts' not found.
-```
-
-Cause: the template used `user-posts`, but the URL pattern did not exist.
-
-Fix:
-
-```python
-path(
-    'user/<str:username>/',
-    UserPostListView.as_view(),
-    name='user-posts'
-)
-```
-
-#### ImportError
-
-```text
-cannot import name 'UserPostListView' from 'blog.views'
-```
-
-Cause: `urls.py` imported `UserPostListView` before it was defined.
-
-Fix: add `UserPostListView` to `blog/views.py`.
-
-### Testing
-
-- Home page loads
-- Five posts per page
-- Page navigation works
-- Author name opens user-specific posts
-- Only selected user's posts are displayed
-- User-specific pagination works
-- Invalid username returns 404
-- Video 10 CRUD and authorization still work
-
-### Project Structure
-
-```text
-11-Pagination/
-└── django_project/
-    ├── blog/
-    │   ├── templates/blog/
-    │   │   ├── base.html
-    │   │   ├── home.html
-    │   │   ├── post_detail.html
-    │   │   ├── post_form.html
-    │   │   ├── post_confirm_delete.html
-    │   │   └── user_posts.html
-    │   ├── models.py
-    │   ├── urls.py
-    │   └── views.py
-    ├── users/
-    ├── django_project/
-    ├── media/
-    ├── db.sqlite3
-    └── manage.py
-```
-
-### Status
-**Completed – Video 11**
-
-### Reference
-Django Pagination: https://docs.djangoproject.com/en/6.1/topics/pagination/
-Django ListView: https://docs.djangoproject.com/en/6.1/ref/class-based-views/generic-display/
+**Completed -- Video 12**

@@ -1,207 +1,165 @@
-# Video 11 Notes – Pagination
+# Django Tutorial -- Video 12 Notes
 
-## 1. Pagination
+## 1. Password Reset
 
-Pagination divides a large list into smaller pages.
+Django provides built-in authentication functionality for password
+reset.
 
-Example:
-
-```text
-20 posts
-↓
-paginate_by = 5
-↓
-4 pages
-```
-
-## 2. paginate_by
-
-```python
-paginate_by = 5
-```
-
-Controls the maximum number of objects shown on one page.
-
-## 3. page_obj
-
-Represents the current page.
-
-```django
-{{ page_obj.number }}
-```
-
-Useful methods:
-
-```python
-page_obj.has_previous()
-page_obj.has_next()
-page_obj.previous_page_number()
-page_obj.next_page_number()
-```
-
-## 4. paginator
-
-Useful values:
-
-```django
-{{ page_obj.paginator.count }}
-{{ page_obj.paginator.num_pages }}
-{{ page_obj.paginator.page_range }}
-```
-
-## 5. is_paginated
-
-```django
-{% if is_paginated %}
-```
-
-Checks whether pagination is active.
-
-## 6. Previous
-
-```django
-{% if page_obj.has_previous %}
-    <a href="?page={{ page_obj.previous_page_number }}">
-        Previous
-    </a>
-{% endif %}
-```
-
-## 7. Next
-
-```django
-{% if page_obj.has_next %}
-    <a href="?page={{ page_obj.next_page_number }}">
-        Next
-    </a>
-{% endif %}
-```
-
-## 8. UserPostListView
-
-```python
-class UserPostListView(ListView):
-    model = Post
-    template_name = 'blog/user_posts.html'
-    context_object_name = 'posts'
-    paginate_by = 5
-
-    def get_queryset(self):
-        user = get_object_or_404(
-            User,
-            username=self.kwargs.get('username')
-        )
-
-        return Post.objects.filter(
-            author=user
-        ).order_by('-date_posted')
-```
-
-## 9. get_queryset()
-
-`get_queryset()` allows us to dynamically filter the objects returned by a `ListView`.
-
-```python
-Post.objects.filter(author=user)
-```
-
-returns only posts written by that user.
-
-## 10. self.kwargs
-
-For:
-
-```python
-path('user/<str:username>/', ...)
-```
-
-the username is available through:
-
-```python
-self.kwargs.get('username')
-```
-
-## 11. get_object_or_404()
-
-```python
-get_object_or_404(User, username=...)
-```
-
-Returns the user if found; otherwise Django returns a 404 response.
-
-## 12. URL Name
-
-```python
-name='user-posts'
-```
-
-allows:
-
-```django
-{% url 'user-posts' post.author.username %}
-```
-
-## 13. Common Errors
-
-### NoReverseMatch
-
-```text
-Reverse for 'user-posts' not found.
-```
-
-Fix the missing URL pattern.
-
-### ImportError
-
-```text
-cannot import name 'UserPostListView'
-```
-
-Define the class in `views.py` before importing it in `urls.py`.
-
-## 14. Core Flow
-
-```text
-URL
- ↓
-ListView
- ↓
-QuerySet
- ↓
-paginate_by
- ↓
-page_obj
- ↓
-Template
- ↓
-Pagination controls
-```
-
-User-specific:
-
-```text
-/user/Shreyansh/
+``` text
+Password Reset Request
         ↓
-UserPostListView
+Enter Email
         ↓
-self.kwargs['username']
+Password Reset Email
         ↓
-get_object_or_404()
+Open Reset Link
         ↓
-Post.objects.filter(author=user)
+Set New Password
         ↓
-paginate_by = 5
-        ↓
-user_posts.html
+Password Reset Complete
 ```
 
-## 15. Main Takeaways
+## 2. Built-in Password Reset Views
 
-```text
-paginate_by       → objects per page
-page_obj          → current page
-paginator         → pagination information
-get_queryset()    → customize/filter QuerySet
-self.kwargs       → URL parameters
-get_object_or_404 → object or 404
+Common Django views: - `PasswordResetView` - `PasswordResetDoneView` -
+`PasswordResetConfirmView` - `PasswordResetCompleteView`
+
+## 3. Typical URL Patterns
+
+``` python
+path(
+    'password-reset/',
+    PasswordResetView.as_view(
+        template_name='users/password_reset.html'
+    ),
+    name='password_reset'
+)
+
+path(
+    'password-reset/done/',
+    PasswordResetDoneView.as_view(
+        template_name='users/password_reset_done.html'
+    ),
+    name='password_reset_done'
+)
+
+path(
+    'password-reset-confirm/<uidb64>/<token>/',
+    PasswordResetConfirmView.as_view(
+        template_name='users/password_reset_confirm.html'
+    ),
+    name='password_reset_confirm'
+)
+
+path(
+    'password-reset-complete/',
+    PasswordResetCompleteView.as_view(
+        template_name='users/password_reset_complete.html'
+    ),
+    name='password_reset_complete'
+)
 ```
+
+## 4. SMTP Backend
+
+For actual email delivery:
+
+``` python
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+```
+
+## 5. Environment Variables
+
+In `settings.py`:
+
+``` python
+EMAIL_HOST_USER = os.environ.get('EMAIL_USER')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_PASS')
+```
+
+In the root `.env`:
+
+``` env
+EMAIL_USER=yourgmail@gmail.com
+EMAIL_PASS=your_app_password
+```
+
+## 6. Loading `.env`
+
+Install:
+
+``` powershell
+python -m pip install python-dotenv
+```
+
+Then:
+
+``` python
+from dotenv import load_dotenv
+
+load_dotenv(
+    os.path.join(
+        BASE_DIR,
+        '..',
+        '..',
+        '.env'
+    )
+)
+```
+
+## 7. Console vs SMTP
+
+Console backend prints the email in the terminal:
+
+``` python
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+```
+
+SMTP backend sends through the configured SMTP server:
+
+``` python
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+```
+
+## 8. Gmail App Password
+
+Use a Google App Password for Gmail SMTP authentication. Treat it as a
+secret.
+
+## 9. Common Problems
+
+If email does not arrive, check: - The Django user has the correct
+registered email. - SMTP backend is configured. - App Password is
+correct. - `.env` is loaded. - Spam/Promotions folders. - Terminal for
+SMTP errors.
+
+Test configuration:
+
+``` powershell
+python manage.py shell
+```
+
+``` python
+from django.conf import settings
+print(settings.EMAIL_HOST_USER)
+print(bool(settings.EMAIL_HOST_PASSWORD))
+```
+
+Expected:
+
+``` text
+yourgmail@gmail.com
+True
+```
+
+## 10. Key Takeaways
+
+-   Django provides built-in password-reset views.
+-   SMTP is used for real email delivery.
+-   Gmail SMTP uses port 587 with TLS.
+-   Keep secrets outside source code.
+-   `.env` should be ignored by Git.
+-   The Django account must have a registered email.
